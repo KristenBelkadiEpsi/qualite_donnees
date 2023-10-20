@@ -1,5 +1,5 @@
 <template>
-  <div style="height: 600px; width: 800px">
+  <div style="height: 1080px; width: 1920px">
     <LMap :zoom="zoom" :center="(center as PointExpression)" ref="map">
       <l-tile-layer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -7,14 +7,27 @@
         name="OpenStreetMap"
       ></l-tile-layer>
       <l-marker :lat-lng="(center as [number, number])">
-        <l-tooltip>EPSI</l-tooltip></l-marker
+        <l-tooltip>EPSI</l-tooltip>
+      </l-marker
       >
       <l-geo-json
         v-for="(circuit, index) in circuits"
-        :geojson="circuit"
         :key="index"
+        :geojson="circuit.shape"
+        :options-style="
+          () => {
+            return { color: '#' + circuit.color, weight: 3, opacity: 1 };
+          }
+        "
       >
       </l-geo-json>
+      <l-marker
+        v-for="(arret, index) in arrets"
+        :key="index"
+        :lat-lng="([arret.stop_coordinates.lat, arret.stop_coordinates.lon] as [number,number])"
+      >
+        <l-tooltip>{{ arret.stop_name }}</l-tooltip>
+      </l-marker>
     </LMap>
   </div>
 </template>
@@ -26,11 +39,12 @@ import {
   LTileLayer,
   LMarker,
   LTooltip,
-  LGeoJson,
+  LGeoJson
 } from "@vue-leaflet/vue-leaflet";
 import { PointExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
+
 export default defineComponent({
   name: "HomeView",
   components: {
@@ -38,15 +52,18 @@ export default defineComponent({
     LTileLayer,
     LMarker,
     LTooltip,
-    LGeoJson,
+    LGeoJson
   },
 
   data() {
     return {
       zoom: 13,
       center: [47.20624365988347, -1.5393715932931804],
-      circuits: [],
+      circuits: <any[]>[],
+      nombreArrets: 0,
+      arrets: <any[]>[]
     };
+
   },
   methods: {
     async getCircuits() {
@@ -55,12 +72,39 @@ export default defineComponent({
           "https://data.nantesmetropole.fr/api/explore/v2.1/catalog/datasets/244400404_tan-circuits/records?limit=-1"
         )
         .then((reponse: any) => {
-          this.circuits = reponse.data.results.map((e: any) => e.shape);
+          this.circuits = reponse.data.results.map((e: any) => {
+            return {
+              shape: e.shape,
+              color: e.route_color
+            };
+          });
         });
     },
+    async getArrets() {
+      await axios
+        .get(
+          "https://data.nantesmetropole.fr/api/explore/v2.1/catalog/datasets/244400404_tan-arrets/records"
+        )
+        .then((result) => {
+          this.nombreArrets = result.data.total_count;
+        });
+      for (let i = 0; i <= this.nombreArrets; i += 100) {
+        await axios
+          .get(
+            `https://data.nantesmetropole.fr/api/explore/v2.1/catalog/datasets/244400404_tan-arrets/records?offset=${i}&limit=100`
+          )
+          .then((reponse) => {
+            let tab: any[] = reponse.data.results;
+            tab.forEach(e => this.arrets.push(e));
+          });
+
+      }
+
+    }
   },
   async mounted() {
     await this.getCircuits();
-  },
+    await this.getArrets();
+  }
 });
 </script>
