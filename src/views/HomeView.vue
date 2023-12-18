@@ -4,9 +4,10 @@
       <h1> Carte des circuits de la TAN </h1>
       <div className="button-container">
         <p className="filtreTitle">Filtres :</p>
-        <div>
-          <button @click="toggleTram" :class="{ active: tramOn }">Tram</button>
-          <button @click="toggleBus" :class="{ active: busOn }">Bus</button>
+        <div className="button-box">
+          <button @click="toggleTram" :class="{ active: tramOn }">Lignes de Tram</button>
+          <button @click="toggleBus" :class="{ active: busOn }">Lignes de Bus</button>
+          <button @click="toggleHandicape" :class="{ active: handicape }">Arrêt accesible handicape</button>
         </div>
       </div>
       <div className="map-container">
@@ -63,6 +64,7 @@ export default defineComponent({
     return {
       tramOn: false,
       busOn: false,
+      handicape: false,
       zoom: 13,
       center: [47.20624365988347, -1.5393715932931804],
       circuits: <any[]>[],
@@ -103,6 +105,10 @@ export default defineComponent({
       this.busOn = !this.busOn;
       this.updateMapDisplay();
     },
+    toggleHandicape() {
+      this.handicape = !this.handicape;
+      this.updateMapDisplay();
+    },
     updateMapDisplay() {
       // Use this.tramOn and this.busOn to determine how to display tram/bus stops on the map
       if (this.tramOn && this.busOn) {
@@ -117,6 +123,11 @@ export default defineComponent({
       } else {
         // Display no circuits
         this.circuitsDisplayed = [];
+      }
+      if (this.handicape) {
+        this.arretsDisplayed = this.arrets.filter((e: any) => e.wheelchair_boarding === "Accessible");
+      } else {
+        this.arretsDisplayed = this.arrets;
       }
     },
     zoomUpdate(zoom: number) {
@@ -171,11 +182,11 @@ export default defineComponent({
     await this.getCircuits();
     await this.getArrets();
     this.formatArrets();
-    this.updateMapDisplay();
     this.circuitsDisplayed = this.circuits;
     this.arretsDisplayed = this.arrets;
     this.circuitsBus = this.circuits.filter((e: any) => e.route_type === "Bus");
     this.circuitsTram = this.circuits.filter((e: any) => e.route_type === "Tram");
+    this.updateMapDisplay();
   }
 });
 </script>
@@ -190,14 +201,20 @@ body {
 .button-container {
   padding: 10px;
   background-color: rgb(206, 209, 213);
-  width: 30vh;
   margin-bottom: 2vh;
+}
+
+.button-box {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 button {
   padding: 10px;
   margin: 0.75vh;
-  width: 10vh;
+  width: 15vh;
+  height: 5vh;
   cursor: pointer;
   border: none;
   outline: none;
