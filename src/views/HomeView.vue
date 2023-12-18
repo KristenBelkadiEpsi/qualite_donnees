@@ -25,7 +25,8 @@
             :lat-lng="([arret.stop_coordinates.lat, arret.stop_coordinates.lon] as [number, number])">
             <l-icon :icon-size="icon.iconSize"
               icon-url="https://cdn4.iconfinder.com/data/icons/small-n-flat/24/map-marker-512.png" />
-            <l-tooltip>{{ arret.stop_name }}</l-tooltip>
+            <l-tooltip>{{ "Nom arrêt : " + arret.stop_name + ", " + "Accesibilité handicape : " +
+              arret.wheelchair_boarding }}</l-tooltip>
           </l-marker>
         </LMap>
       </div>
@@ -83,6 +84,17 @@ export default defineComponent({
 
   },
   methods: {
+    formatArrets() {
+      this.arrets.forEach((e: any) => {
+        if (e.wheelchair_boarding == null) {
+          e.wheelchair_boarding = "Non renseigné";
+        } else if (e.wheelchair_boarding === "2") {
+          e.wheelchair_boarding = "Non accessible";
+        } else if (e.wheelchair_boarding === "1") {
+          e.wheelchair_boarding = "Accessible";
+        }
+      });
+    },
     toggleTram() {
       this.tramOn = !this.tramOn;
       this.updateMapDisplay();
@@ -158,10 +170,10 @@ export default defineComponent({
   async mounted() {
     await this.getCircuits();
     await this.getArrets();
+    this.formatArrets();
     this.updateMapDisplay();
     this.circuitsDisplayed = this.circuits;
     this.arretsDisplayed = this.arrets;
-    console.log(this.circuits)
     this.circuitsBus = this.circuits.filter((e: any) => e.route_type === "Bus");
     this.circuitsTram = this.circuits.filter((e: any) => e.route_type === "Tram");
   }
