@@ -48,6 +48,8 @@ import {
 import { PointExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
+import { removeStopsWithNumericSuffix } from "@/utils/prepare_data";
+
 
 export default defineComponent({
   name: "HomeView",
@@ -175,7 +177,8 @@ export default defineComponent({
             tab.forEach(e => this.arrets.push(e));
           });
       }
-
+      this.arrets = removeStopsWithNumericSuffix(this.arrets);
+      console.log(this.arrets);
     }
   },
   async mounted() {
