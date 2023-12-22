@@ -178,7 +178,6 @@ export default defineComponent({
           });
       }
       this.arrets = removeStopsWithNumericSuffix(this.arrets);
-      console.log(this.arrets);
     }
   },
   async mounted() {
